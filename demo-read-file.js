@@ -3,7 +3,7 @@
 (() => {
   zip.configure({
     workerScripts: {
-      inflate: ["lib/z-worker-pako.js", "pako_inflate.min.js"],
+      inflate: ["z-worker-pako.js", "pako_inflate.min.js"],
     },
   });
 
