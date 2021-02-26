@@ -167,7 +167,7 @@
           console.log(fileName + " #2-1 BLOB変換終了。ファイルサイズ(BYTE) : " + blob.size);
 
           // フォルダハンドル作成（フォルダ作成）
-          let comps = filename.split("/");
+          let comps = fileName.split("/");
           let parentDirHandle = rootDirHandle;
           // ファイルパスにフォルダを含む場合
           if (comps.length != 1) {
