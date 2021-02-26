@@ -149,15 +149,13 @@
         "unzipTime : 解凍中です。解凍が終了すると解凍にかかった時間を表示します。";
 
       let startTime = new Date();
-      console.log("getEntries before : " + startTime);
-
       let writeFileCount = 0;
 
       console.log("zipに含まれるファイル数 : " + entries.length);
       // zip内ファイル取り出し（blob）
       // entries.length がファイル数
-      for await (entry of entries) {
-        console.log(entry.filename + " getData start");
+      for (entry of entries) {
+        console.log(entry.filename + " #1 BLOB変換開始");
 
         // entryからblobを取り出す。
         entryGetData(entry).then(async (blobMap) => {
@@ -166,7 +164,7 @@
           let mapIte = blobMap.keys();
           let fileName = mapIte.next().value;
           let blob = blobMap.get(fileName);
-          console.log(fileName + " getData end , fileSize : " + blob.size);
+          console.log(fileName + " #2-1 BLOB変換終了。ファイルサイズ(BYTE) : " + blob.size);
 
           // フォルダハンドル作成（フォルダ作成）
           let comps = entry.filename.split("/");
@@ -186,11 +184,10 @@
           await writeFile(fileHandle, blob);
           writeFileCount++;
           console.log(
-            fileName + " writeFile end. writeFileCount : " + writeFileCount
+            fileName + " #2-2 ファイル書込終了。書込終了数 : " + writeFileCount
           );
           if (entries.length == writeFileCount) {
             let endTime = new Date();
-            console.log("getEntries after : " + endTime);
             let unzipTIme = (endTime.getTime() - startTime.getTime()) / 1000;
             console.log("解凍にかかった時間 : " + unzipTIme + "秒");
             document.getElementById("unzipTime").textContent =
