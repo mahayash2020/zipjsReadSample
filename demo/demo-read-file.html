@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Read a zip file (demo zip.js)</title>
+	<meta name="viewport" content="width=device-width">
+	<link rel="stylesheet" href="../default.css">
+	<link rel="stylesheet" href="demo.css">
+	<link href="https://fonts.googleapis.com/css?family=Maven+Pro|Muli|Droid+Sans+Mono|Istok+Web" rel="stylesheet"
+		type="text/css">
+</head>
+
+<body>
+	<a href="https://github.com/gildas-lormeau/zip.js/blob/gh-pages/demos/demo-read-file.js" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill: #202020;color: #a69373;position: absolute;top: 0;border: 0;right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>	
+	<div id="container">
+		<h1>
+			<a href="../">zip.js</a> <span class="small"></span>
+		</h1>
+
+		<div class="description">
+			Openでzipを読み込み、Unzipで解凍先のローカルフォルダを選択し、解凍処理を開始します。
+			<hr>
+		</div>
+
+		<h2>Read a zip file (demo)</h2>
+
+		<ol id="demo-container">
+			<li>
+				<label>
+					<span class="form-label">choose a zip file</span>
+					<button id="file-input-button">Open...</button>
+					<button id="unzipButton">Unzip...</button>
+					<input type="file" id="file-input" accept="application/zip" hidden>
+				</label>
+				<div id="unzipFile">unzipFile : </div>
+				<div id="unzipTime">unzipTime : </div>
+			</li>
+			<br/>
+			<div>↓↓↓2～4は特に使わない。4はリンクを押せばファイルをDL可能。↓↓↓</div>
+			<br/>
+			<li id="encoding-item">
+				<label>
+					<span class="form-label">select the encoding of names</span>
+					<select id="encoding-input" disabled>
+						<option>utf-8</option>
+						<option>cp437</option>
+						<option>ibm866</option>
+						<option>iso-8859-2</option>
+						<option>iso-8859-3</option>
+						<option>iso-8859-4</option>
+						<option>iso-8859-5</option>
+						<option>iso-8859-6</option>
+						<option>iso-8859-7</option>
+						<option>iso-8859-8</option>
+						<option>iso-8859-10</option>
+						<option>iso-8859-13</option>
+						<option>iso-8859-14</option>
+						<option>iso-8859-15</option>
+						<option>iso-8859-16</option>
+						<option>koi8-r</option>
+						<option>koi8-u</option>
+						<option>macintosh</option>
+						<option>windows-874</option>
+						<option>windows-1250</option>
+						<option>windows-1251</option>
+						<option>windows-1252</option>
+						<option>windows-1253</option>
+						<option>windows-1254</option>
+						<option>windows-1255</option>
+						<option>windows-1256</option>
+						<option>windows-1257</option>
+						<option>windows-1258</option>
+						<option>x-mac-cyrillic</option>
+						<option>gbk</option>
+						<option>gb18030</option>
+						<option>big5</option>
+						<option>euc-jp</option>
+						<option>iso-2022-jp</option>
+						<option>shift-jis</option>
+						<option>euc-kr</option>
+						<option>utf-16be</option>
+						<option>utf-16le</option>
+						<option>x-user-defined</option>
+					</select>
+				</label>
+			</li>
+			<li>
+				<label>
+					<span class="form-label">set the password</span>
+					<input type="password" id="password-input" value="" disabled>
+				</label>
+			</li>
+			<li>
+				<label>
+					<span class="form-label">download uncompressed files</span>
+					<ul id="file-list" class="empty">
+					</ul>
+				</label>
+			</li>
+		</ol>
+
+	</div>
+	<script type="text/javascript" src="lib/zip.min.js"></script>
+	<script type="text/javascript" src="demo-read-file.js"></script>
+</body>
+
+</html>
