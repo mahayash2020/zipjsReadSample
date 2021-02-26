@@ -41,53 +41,53 @@
     );
     let entries,
       selectedFile = null;
-      passwordInput.onchange = async () =>
-        fileList
-          .querySelectorAll("a[download]")
-          .forEach((anchor) => (anchor.download = ""));
-      fileInput.onchange = async () => {
-        try {
-          fileInputButton.disabled = true;
-          encodingInput.disabled = true;
-          selectedFile = fileInput.files[0];
-          await loadFiles();
-        } catch (error) {
-          alert(error);
-        } finally {
-          fileInputButton.disabled = false;
-          fileInput.value = "";
-        }
-      };
-      encodingInput.onchange = async () => {
-        try {
-          encodingInput.disabled = true;
-          fileInputButton.disabled = true;
-          await loadFiles(encodingInput.value);
-        } catch (error) {
-          alert(error);
-        } finally {
-          fileInputButton.disabled = false;
-        }
-      };
-      appContainer.addEventListener(
-        "click",
-        async (event) => {
-          const target = event.target;
-          if (target.dataset.entryIndex !== undefined && !target.download) {
-            event.preventDefault();
-            try {
-              await download(
-                entries[Number(target.dataset.entryIndex)],
-                target.parentElement,
-                target
-              );
-            } catch (error) {
-              alert(error);
-            }
+    passwordInput.onchange = async () =>
+      fileList
+        .querySelectorAll("a[download]")
+        .forEach((anchor) => (anchor.download = ""));
+    fileInput.onchange = async () => {
+      try {
+        fileInputButton.disabled = true;
+        encodingInput.disabled = true;
+        selectedFile = fileInput.files[0];
+        await loadFiles();
+      } catch (error) {
+        alert(error);
+      } finally {
+        fileInputButton.disabled = false;
+        fileInput.value = "";
+      }
+    };
+    encodingInput.onchange = async () => {
+      try {
+        encodingInput.disabled = true;
+        fileInputButton.disabled = true;
+        await loadFiles(encodingInput.value);
+      } catch (error) {
+        alert(error);
+      } finally {
+        fileInputButton.disabled = false;
+      }
+    };
+    appContainer.addEventListener(
+      "click",
+      async (event) => {
+        const target = event.target;
+        if (target.dataset.entryIndex !== undefined && !target.download) {
+          event.preventDefault();
+          try {
+            await download(
+              entries[Number(target.dataset.entryIndex)],
+              target.parentElement,
+              target
+            );
+          } catch (error) {
+            alert(error);
           }
-        },
-        false
-      );
+        }
+      },
+      false
+    );
 
     /**
      * ファイル内容書込処理
@@ -180,10 +180,13 @@
       // zip内ファイル取り出し（blob）
       for await (entry of entries) {
         console.log(entry.filename + " : getData");
-        entryGetData(entry).then((blob) => {
+        entryGetData(entry).then((blobMap) => {
+          let mapIte = blobMap.keys();
+          let fileName = mapIte.next().value;
+          let blob = blobMap.get(fileName);
           // mapに退避
-          blobMap.set(entry.filename, blob);
-          console.log(entry.filename + " : size -> " + blob.size);
+          //blobMap.set(fileName, blob);
+          console.log(fileName + " : size -> " + blob.size);
         });
       }
       // 全ファイルのblob取り出しが終了
@@ -198,8 +201,10 @@
     });
 
     async function entryGetData(entry) {
+      let blobMap = new Map();
       let blob = await entry.getData(new zip.BlobWriter(), {});
-      return blob;
+      blobMap.set(entry.filename, blob);
+      return blobMap;
     }
 
     // unzip処理
