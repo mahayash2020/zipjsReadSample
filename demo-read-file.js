@@ -158,6 +158,7 @@
       // entries.length がファイル数
       for await (entry of entries) {
         console.log(entry.filename + " getData start");
+
         // entryからblobを取り出す。
         entryGetData(entry).then(async (blobMap) => {
           // blobを取り出した後はファイルに書き出す
@@ -183,17 +184,20 @@
           );
           // ファイル内容書込
           await writeFile(fileHandle, blob);
-          console.log(fileName + " writeFile end. writeFileCount : " + writeFileCount);
           writeFileCount++;
+          console.log(
+            fileName + " writeFile end. writeFileCount : " + writeFileCount
+          );
+          if (entries.length == writeFileCount) {
+            let endTime = new Date();
+            console.log("getEntries after : " + endTime);
+            let unzipTIme = (endTime.getTime() - startTime.getTime()) / 1000;
+            console.log("解凍にかかった時間 : " + unzipTIme + "秒");
+            document.getElementById("unzipTime").textContent =
+              "unzipTIme : " + unzipTIme + "秒";
+          }
         });
       }
-
-      let endTime = new Date();
-      console.log("getEntries after : " + endTime);
-      let unzipTIme = (endTime.getTime() - startTime.getTime()) / 1000;
-      console.log("解凍にかかった時間 : " + unzipTIme + "秒");
-      document.getElementById("unzipTime").textContent =
-        "unzipTIme : " + unzipTIme + "秒";
     });
 
     async function entryGetData(entry) {
