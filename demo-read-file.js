@@ -183,7 +183,7 @@
           );
           // ファイル内容書込
           await writeFile(fileHandle, blob);
-          console.log(fileName + " writeFile end. writeFileCount : " + writeFile);
+          console.log(fileName + " writeFile end. writeFileCount : " + writeFileCount);
           writeFileCount++;
         });
       }
