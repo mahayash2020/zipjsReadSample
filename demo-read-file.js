@@ -29,6 +29,8 @@
     const unzipProgress = document.createElement("progress");
     const unzipButton = document.getElementById("unzipButton");
     let fileList = document.getElementById("file-list");
+    // フォルダハンドル退避用
+    let dirHandleMap = new Map();
     fileInputButton.addEventListener(
       "click",
       () => fileInput.dispatchEvent(new MouseEvent("click")),
@@ -84,6 +86,45 @@
       false
     );
 
+    /**
+     * ファイル内容書込処理
+     * @param {*} fileHandle ファイルハンドル
+     * @param {*} contents ファイル内容(BLOBなど)
+     */
+    async function writeFile(fileHandle, contents) {
+      // Create a FileSystemWritableFileStream to write to.
+      let writable = await fileHandle.createWritable();
+      // Write the contents of the file to the stream.
+      await writable.write(contents);
+      // Close the file and write the contents to disk.
+      await writable.close();
+    }
+    /**
+     * フォルダハンドル作成処理
+     * フォルダハンドルがまだ作られていない場合、フォルダハンドルを作成し、Mapに詰める。
+     * 子フォルダが存在する場合、当処理を再帰的に行う。
+     * @param {*} _comps 対象ファイルのファイルパスを"/"で分割した配列
+     * @param {*} _count compsのうち、処理中の階層を表す
+     * @param {*} _parentDirHandle 親フォルダハンドル
+     */
+    async function createDirHandleMap(_comps, _count, _parentDirHandle) {
+      // まだフォルダが作られていない場合
+      if (dirHandleMap.has(_comps[_count]) != -1) {
+        let dir = await _parentDirHandle.getDirectoryHandle(_comps[_count], {
+          create: true,
+        });
+        // ハンドルをmapに退避
+        dirHandleMap.set(_comps[_count], dir);
+
+        // 子フォルダが存在する場合
+        if (_count != _comps.length - 2) {
+          // 再帰呼び出し
+          _count++;
+          await createDirHandleMap(_comps, _count, dir);
+        }
+      }
+    }
+
     unzipButton.addEventListener("click", async () => {
       if (entries == null) {
         alert("まずzipを読み込んでください。");
@@ -107,9 +148,25 @@
       console.log("getEntries before : " + startTime);
       // zip内ファイル取り出し（blob）＆ローカルに書き出し
       for await (entry of entries) {
-        // TODO修正
-        let data = await entry.getData(new zip.BlobWriter(), {});
-        console.log(entry.filename + " , size -> " + data.size);
+        let blob = await entry.getData(new zip.BlobWriter(), {});
+        console.log(entry.filename + " , size -> " + blob.size);
+
+        // フォルダハンドル作成（フォルダ作成）
+        let comps = entry.filename.split("/");
+        let parentDirHandle = rootDirHandle;
+        // ファイルパスにフォルダを含む場合
+        if (comps.length != 1) {
+          await createDirHandleMap(comps, 0, rootDirHandle);
+          // ファイルを格納するフォルダハンドルを取得（フォルダ取得）
+          parentDirHandle = dirHandleMap.get(comps[comps.length - 2]);
+        }
+        // 空ファイル作成
+        let fileHandle = await parentDirHandle.getFileHandle(
+          comps[comps.length - 1],
+          { create: true }
+        );
+        // ファイル内容書込
+        await writeFile(fileHandle, blob);
       }
       let endTime = new Date();
       console.log("getEntries after : " + endTime);
@@ -125,7 +182,8 @@
 
       // zip内の情報取り出し
       entries = await model.getEntries(selectedFile, { filenameEncoding });
-      document.getElementById("unzipFile").textContent = "unzipFile : " + selectedFile.name;
+      document.getElementById("unzipFile").textContent =
+        "unzipFile : " + selectedFile.name;
 
       if (entries && entries.length) {
         fileList.classList.remove("empty");
