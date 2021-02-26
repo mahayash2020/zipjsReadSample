@@ -151,46 +151,42 @@
       let startTime = new Date();
       console.log("getEntries before : " + startTime);
 
-      let blobMap = new Map();
-      //let isEndGetDataAll = false;
+      let writeFileCount = 0;
 
-      // ファイル書込タイマー処理定義
-      let writeFileFn = async function () {
-        // フォルダハンドル作成（フォルダ作成）
-        let comps = entry.filename.split("/");
-        let parentDirHandle = rootDirHandle;
-        // ファイルパスにフォルダを含む場合
-        if (comps.length != 1) {
-          await createDirHandleMap(comps, 0, rootDirHandle);
-          // ファイルを格納するフォルダハンドルを取得（フォルダ取得）
-          parentDirHandle = dirHandleMap.get(comps[comps.length - 2]);
-        }
-        // 空ファイル作成
-        let fileHandle = await parentDirHandle.getFileHandle(
-          comps[comps.length - 1],
-          { create: true }
-        );
-        // ファイル内容書込
-        await writeFile(fileHandle, blob);
-      };
-
-      // ファイル保存タイマー実行
-      //let writeFileTimer = setInterval(writeFileFn, 100);
-
+      console.log("zipに含まれるファイル数 : " + entries.length);
       // zip内ファイル取り出し（blob）
+      // entries.length がファイル数
       for await (entry of entries) {
-        console.log(entry.filename + " : getData");
-        entryGetData(entry).then((blobMap) => {
+        console.log(entry.filename + " getData start");
+        // entryからblobを取り出す。
+        entryGetData(entry).then(async (blobMap) => {
+          // blobを取り出した後はファイルに書き出す
+
           let mapIte = blobMap.keys();
           let fileName = mapIte.next().value;
           let blob = blobMap.get(fileName);
-          // mapに退避
-          //blobMap.set(fileName, blob);
-          console.log(fileName + " : size -> " + blob.size);
+          console.log(fileName + " getData end , fileSize : " + blob.size);
+
+          // フォルダハンドル作成（フォルダ作成）
+          let comps = entry.filename.split("/");
+          let parentDirHandle = rootDirHandle;
+          // ファイルパスにフォルダを含む場合
+          if (comps.length != 1) {
+            await createDirHandleMap(comps, 0, rootDirHandle);
+            // ファイルを格納するフォルダハンドルを取得（フォルダ取得）
+            parentDirHandle = dirHandleMap.get(comps[comps.length - 2]);
+          }
+          // 空ファイル作成
+          let fileHandle = await parentDirHandle.getFileHandle(
+            comps[comps.length - 1],
+            { create: true }
+          );
+          // ファイル内容書込
+          await writeFile(fileHandle, blob);
+          console.log(fileName + " writeFile end. writeFileCount : " + writeFile);
+          writeFileCount++;
         });
       }
-      // 全ファイルのblob取り出しが終了
-      //isEndGetDataAll = true;
 
       let endTime = new Date();
       console.log("getEntries after : " + endTime);
