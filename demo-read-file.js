@@ -154,6 +154,9 @@
       console.log("zipに含まれるファイル数 : " + entries.length);
       // zip内ファイル取り出し（blob）
       // entries.length がファイル数
+
+      // 【メモ】解凍も保存も非同期でわーっと走るので、これを複数のzipで行いたい場合は、もしかしたら同時に処理する量を制限しないと落ちるかも
+      // zip内のファイルを並列でBLOBに変換 → ファイル書込を行う
       for (entry of entries) {
         console.log(entry.filename + " #1 BLOB変換開始");
 
