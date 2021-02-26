@@ -27,7 +27,10 @@
     const fileInputButton = document.getElementById("file-input-button");
     const passwordInput = document.getElementById("password-input");
     const unzipProgress = document.createElement("progress");
+
     const unzipButton = document.getElementById("unzipButton");
+    const unzipParallelButton = document.getElementById("unzipParallelButton");
+
     let fileList = document.getElementById("file-list");
     // フォルダハンドル退避用
     let dirHandleMap = new Map();
@@ -38,53 +41,53 @@
     );
     let entries,
       selectedFile = null;
-    passwordInput.onchange = async () =>
-      fileList
-        .querySelectorAll("a[download]")
-        .forEach((anchor) => (anchor.download = ""));
-    fileInput.onchange = async () => {
-      try {
-        fileInputButton.disabled = true;
-        encodingInput.disabled = true;
-        selectedFile = fileInput.files[0];
-        await loadFiles();
-      } catch (error) {
-        alert(error);
-      } finally {
-        fileInputButton.disabled = false;
-        fileInput.value = "";
-      }
-    };
-    encodingInput.onchange = async () => {
-      try {
-        encodingInput.disabled = true;
-        fileInputButton.disabled = true;
-        await loadFiles(encodingInput.value);
-      } catch (error) {
-        alert(error);
-      } finally {
-        fileInputButton.disabled = false;
-      }
-    };
-    appContainer.addEventListener(
-      "click",
-      async (event) => {
-        const target = event.target;
-        if (target.dataset.entryIndex !== undefined && !target.download) {
-          event.preventDefault();
-          try {
-            await download(
-              entries[Number(target.dataset.entryIndex)],
-              target.parentElement,
-              target
-            );
-          } catch (error) {
-            alert(error);
-          }
+      passwordInput.onchange = async () =>
+        fileList
+          .querySelectorAll("a[download]")
+          .forEach((anchor) => (anchor.download = ""));
+      fileInput.onchange = async () => {
+        try {
+          fileInputButton.disabled = true;
+          encodingInput.disabled = true;
+          selectedFile = fileInput.files[0];
+          await loadFiles();
+        } catch (error) {
+          alert(error);
+        } finally {
+          fileInputButton.disabled = false;
+          fileInput.value = "";
         }
-      },
-      false
-    );
+      };
+      encodingInput.onchange = async () => {
+        try {
+          encodingInput.disabled = true;
+          fileInputButton.disabled = true;
+          await loadFiles(encodingInput.value);
+        } catch (error) {
+          alert(error);
+        } finally {
+          fileInputButton.disabled = false;
+        }
+      };
+      appContainer.addEventListener(
+        "click",
+        async (event) => {
+          const target = event.target;
+          if (target.dataset.entryIndex !== undefined && !target.download) {
+            event.preventDefault();
+            try {
+              await download(
+                entries[Number(target.dataset.entryIndex)],
+                target.parentElement,
+                target
+              );
+            } catch (error) {
+              alert(error);
+            }
+          }
+        },
+        false
+      );
 
     /**
      * ファイル内容書込処理
@@ -125,6 +128,81 @@
       }
     }
 
+    // unzip処理(解凍とファイル書込を並行で処理)
+    unzipParallelButton.addEventListener("click", async () => {
+      if (entries == null) {
+        alert("まずzipを読み込んでください。");
+        return;
+      }
+
+      // 解凍先ローカルフォルダ選択ダイアログ表示（フォルダ選択後にはファイル読取許可アラートが表示される）
+      let rootDirHandle = await window.showDirectoryPicker();
+
+      // 編集許可アラートを先に出すために仮フォルダ作成
+      await rootDirHandle.getDirectoryHandle("unziptemp", {
+        create: true,
+      });
+      // 編集許可が取れたら作成した仮フォルダを消す
+      await rootDirHandle.removeEntry("unziptemp");
+
+      document.getElementById("unzipTime").textContent =
+        "unzipTime : 解凍中です。解凍が終了すると解凍にかかった時間を表示します。";
+
+      let startTime = new Date();
+      console.log("getEntries before : " + startTime);
+
+      let blobMap = new Map();
+      //let isEndGetDataAll = false;
+
+      // ファイル書込タイマー処理定義
+      let writeFileFn = async function () {
+        // フォルダハンドル作成（フォルダ作成）
+        let comps = entry.filename.split("/");
+        let parentDirHandle = rootDirHandle;
+        // ファイルパスにフォルダを含む場合
+        if (comps.length != 1) {
+          await createDirHandleMap(comps, 0, rootDirHandle);
+          // ファイルを格納するフォルダハンドルを取得（フォルダ取得）
+          parentDirHandle = dirHandleMap.get(comps[comps.length - 2]);
+        }
+        // 空ファイル作成
+        let fileHandle = await parentDirHandle.getFileHandle(
+          comps[comps.length - 1],
+          { create: true }
+        );
+        // ファイル内容書込
+        await writeFile(fileHandle, blob);
+      };
+
+      // ファイル保存タイマー実行
+      //let writeFileTimer = setInterval(writeFileFn, 100);
+
+      // zip内ファイル取り出し（blob）
+      for await (entry of entries) {
+        console.log(entry.filename + " : getData");
+        entryGetData(entry).then((blob) => {
+          // mapに退避
+          blobMap.set(entry.filename, blob);
+          console.log(entry.filename + " : size -> " + blob.size);
+        });
+      }
+      // 全ファイルのblob取り出しが終了
+      //isEndGetDataAll = true;
+
+      let endTime = new Date();
+      console.log("getEntries after : " + endTime);
+      let unzipTIme = (endTime.getTime() - startTime.getTime()) / 1000;
+      console.log("解凍にかかった時間 : " + unzipTIme + "秒");
+      document.getElementById("unzipTime").textContent =
+        "unzipTIme : " + unzipTIme + "秒";
+    });
+
+    async function entryGetData(entry) {
+      let blob = await entry.getData(new zip.BlobWriter(), {});
+      return blob;
+    }
+
+    // unzip処理
     unzipButton.addEventListener("click", async () => {
       if (entries == null) {
         alert("まずzipを読み込んでください。");
@@ -176,6 +254,7 @@
         "unzipTIme : " + unzipTIme + "秒";
     });
 
+    // zip読込 Openボタン押下時処理
     async function loadFiles(filenameEncoding) {
       document.getElementById("unzipFile").textContent = "unzipFile : ";
       document.getElementById("unzipTime").textContent = "unzipTime : ";

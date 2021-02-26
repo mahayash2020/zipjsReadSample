@@ -19,7 +19,9 @@
 		</h1>
 
 		<div class="description">
-			Openでzipを読み込み、Unzipで解凍先のローカルフォルダを選択し、解凍処理を開始します。
+			Openでzipを読み込み。<br/>
+			Unzipで解凍先のローカルフォルダを選択し、解凍処理を開始します。<br/>
+			※Unzip(parallel)は解凍処理（解凍とファイル保存を並列で実行します）
 			<hr>
 		</div>
 
@@ -30,7 +32,8 @@
 				<label>
 					<span class="form-label">choose a zip file</span>
 					<button id="file-input-button">Open...</button>
-					<button id="unzipButton">Unzip...</button>
+					<button id="unzipButton">Unzip</button>
+					<button id="unzipParallelButton">Unzip(parallel)</button>
 					<input type="file" id="file-input" accept="application/zip" hidden>
 				</label>
 				<div id="unzipFile">unzipFile : </div>
